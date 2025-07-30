@@ -444,8 +444,32 @@ public class LocationStep extends Step {
         }
         // Remove duplicate nodes
         result.removeDuplicates();
-        // Apply the predicate
-        result = applyPredicate(contextSequence, result);
+
+        if (predicates != null && predicates.length > 0) {
+            boolean positional = false;
+            for (final Predicate predicate : predicates) {
+                if (predicate.getExecutionMode() == Predicate.ExecutionMode.POSITIONAL) {
+                    positional = true;
+                    break;
+                }
+            }
+            if (positional) {
+                result = applyPredicate(contextSequence, result);
+            } else {
+                final ValueSequence newResult = new ValueSequence();
+                for (final SequenceIterator i = result.iterate(); i.hasNext();) {
+                    final Item item = i.nextItem();
+                    final Sequence processed = applyPredicate(contextSequence, item.toSequence());
+                    if (!processed.isEmpty()) {
+                        newResult.add(item);
+                    }
+                }
+                result = newResult;
+            }
+        } else {
+            // Apply the predicate
+            result = applyPredicate(contextSequence, result);
+        }
 
         if (context.getProfiler().isEnabled()) {
             context.getProfiler().end(this, "", result);

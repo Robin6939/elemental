@@ -21,39 +21,31 @@
  :)
 xquery version "3.1";
 
-(: https://github.com/eXist-db/exist/issues/3737 :)
-module namespace fn-pos="http://exist-db.org/xquery/test/fn-position";
-
+module namespace t="http://exist-db.org/xquery/test";
 
 declare namespace test="http://exist-db.org/xquery/xqsuite";
 
-
-declare variable $fn-pos:collection := 'test-fn-pos';
-declare variable $fn-pos:doc := 'stored-nodes.xml';
-declare variable $fn-pos:nodes := document {
-    <a>
-      <b n="a"/>
-      <b n="b"/>
-      <b n="c"/>
-    </a>
+declare variable $t:XML := document {
+    <A><B></B></A>
 };
 
 declare
     %test:setUp
-function fn-pos:setup () {
-    xmldb:create-collection('/db', $fn-pos:collection),
-    xmldb:store('/db/' || $fn-pos:collection, $fn-pos:doc, $fn-pos:nodes)
+function t:setup() {
+    xmldb:create-collection("/db", "test"),
+    xmldb:store("/db/test", "test.xml", $t:XML)
 };
 
 declare
     %test:tearDown
-function fn-pos:teardown () {
-    xmldb:remove('/db/' || $fn-pos:collection, $fn-pos:doc)
+function t:tearDown() {
+    xmldb:remove("/db/test")
 };
 
 declare
-    %test:assertEquals(1,1)
-function fn-pos:test-in-memory-dom-with-positional-predicates() {
-    $fn-pos:nodes/a[1]/position(),
-    $fn-pos:nodes//b[3]/position()
+    %test:assertEquals("2")
+function t:test-db() {
+    count(
+        doc("/db/test/test.xml")//*[last() <= 1]
+    )
 };
